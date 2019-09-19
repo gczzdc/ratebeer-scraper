@@ -1,7 +1,10 @@
-from scraper import scrape_one
+import scraper
 from bs4 import BeautifulSoup
 # import numpy as np
 from number_parser import parse_number
+import exceptions
+from error_logger import log
+import time
 
 base_url = 'https://www.ratebeer.com'
 regions_page = '/brewery-directory.asp'
@@ -27,23 +30,22 @@ def find_ratebeer_regions(regions_page = regions_page):
 	optional argument specifying where to look that 
 	usually shouldn't need specification
 	'''
-	response_text = scrape_one(base_url+regions_page)
+	response_text = scraper.scrape_one(base_url+regions_page)
 	response_soup = BeautifulSoup(response_text,'html.parser')
 	parent_div = response_soup.find('div',id='default')
 	anchors = parent_div.find_all('a')
 	links = [a['href'] for a in anchors]
 	return (links)
 
-def find_ratebeer_breweries(region_page, active_only = False):
+def parse_region_page(region_html,active_only=False):
 	'''
-	returns a list of relative links to brewery pages
+	parses a raw html object that is supposed to be a region page
 
 	optional argument specifying whether to look only at active breweries
 	default false
 	'''
-	response_text = scrape_one(base_url+region_page)
-	response_soup = BeautifulSoup(response_text,'html.parser')
-	tables = response_soup.find_all(id='brewerTable')
+	region_soup = BeautifulSoup(region_html,'html.parser')
+	tables = region_soup.find_all(id='brewerTable')
 	if active_only:
 		tables = tables[:1]
 		# this hack probably behaves unexpectedly on a region 
@@ -55,20 +57,85 @@ def find_ratebeer_breweries(region_page, active_only = False):
 		brewery_pages.extend(links)
 	return (brewery_pages)
 
+def find_ratebeer_breweries(region_page, active_only = False):
+	'''
+	returns a list of relative links to brewery pages
+
+	optional argument specifying whether to look only at active breweries
+	default false
+	'''
+	response_text = scraper.scrape_one(base_url+region_page)
+	return (parse_region_page(response_text,active_only))
+
+
+def find_ratebeer_many_breweries(region_pages, active_only=False):
+	'''
+	returns a list of lists of relative links to brewery pages
+
+	optional argument specifying whether to look only at active breweries
+	default false
+	'''
+	kw_dic = {'active_only':active_only}
+	return (scraper.find_and_parse_many_pages(
+		base_url = base_url, 
+		page_list =region_pages, 
+		parser =parse_region_page, 
+		kw_dic=kw_dic))
+	
+def find_ratebeer_many_beers(brewery_pages):
+	'''
+	returns a list of lists of relative links to beer pages
+	'''
+	return (scraper.find_and_parse_many_pages(
+		base_url=base_url,
+		page_list = brewery_pages,
+		parser = parse_brewery_page))
+
 def find_ratebeer_beers(brewery_page):
 	'''
 	returns a list of relative links to beer pages
 	'''
-	response_text = scrape_one(base_url+brewery_page)
-	response_soup = BeautifulSoup(response_text,'html.parser')
-	tbody = response_soup.find('tbody')
+	response_html = scraper.scrape_one(base_url+brewery_page)
+	return (parse_brewery_page(response_html))
+
+
+def parse_brewery_page(brewery_html):
+	'''
+	returns a list of relative links to beer pages
+
+	expects a beautiful soup of a brewery page
+	'''
+	brewery_soup = BeautifulSoup(brewery_html)
+	tbody = brewery_soup.find('tbody')
 	table_rows = tbody.find_all('tr')
 	anchors = [row.td.strong.a for row in table_rows]
 	links = [a['href'] for a in anchors]
 	return (links)
 
+def scrape_and_parse_beer(beer_page):
+	'''
+	attempts to scrape and parse a beer page
 
-def parse_ratebeer_beer(beer_soup):
+	this needs to use selenium to handle redirects
+	empirically this means that we should wait .3 seconds
+	before accessing page source to parse.
+	'''
+	driver = scraper.scrape_one_js(base_url + beer_page)
+	beer_info = {}
+	for j in range(scraper.max_errors):
+		time.sleep(scraper.js_sleep)
+		beer_html = driver.page_source
+		try:
+			beer_info = parse_ratebeer_beer(beer_html)
+			break
+		except exceptions.ParseError:
+			pass
+	else:
+		log('Failed to parse beer page '+beer_page)
+	driver.close()
+	return (beer_info)
+
+def parse_ratebeer_beer(beer_html):
 	'''
 	saves less information than the whole webpage
 
@@ -90,8 +157,10 @@ def parse_ratebeer_beer(beer_soup):
 	reviews
 	similar
 	'''
-	# findable_div = beer_soup.find(class_='sc-hrWEMg')
+	beer_soup = BeautifulSoup(beer_html)
 	wrapping_div = beer_soup.find(class_='p-4')
+	if wrapping_div == None:
+		raise exceptions.ParseError("no wrapping div")
 	info_and_text_divs= wrapping_div.find_all('div',recursive=False)
 	info_div = info_and_text_divs[0]
 	text_div = info_and_text_divs[1]
