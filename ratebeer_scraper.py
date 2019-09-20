@@ -15,7 +15,7 @@ def delay():
 html_parser = 'html.parser'
 base_url = 'https://www.ratebeer.com'
 regions_page = '/brewery-directory.asp'
-regions_page_file = 'regions.pickle'
+regions_page_file = 'regions/regions.pickle'
 
 # web-accessible database structure for ratebeer:
 #
@@ -83,7 +83,7 @@ def generate_all(loud=True):
 	region_length = len(regions)
 	all_breweries = []
 	for (j,region) in enumerate(regions):
-		breweries_file = clean_address_for_filename(region)+'.pickle'
+		breweries_file = 'breweries/'+clean_address_for_filename(region)+'.pickle'
 		if loud:
 			print ('working on region ',j, 'of', region_length)
 		breweries = check_local(breweries_file, find_breweries, [region,])
@@ -91,14 +91,14 @@ def generate_all(loud=True):
 	brewery_length = len(all_breweries)
 	all_beers = []
 	for j,brewery in enumerate(all_breweries):
-		beers_file = clean_address_for_filename(brewery)+'.pickle'
+		beers_file = 'brewers/'+clean_address_for_filename(brewery)+'.pickle'
 		if loud:
 			print ('working on brewery ',j, 'of', brewery_length)
 		beers = check_local(beers_file, find_beers, [brewery,])
 		all_beers.extend(beers)
 	beer_length = len(all_beers)
 	for (j,beer) in enumerate(all_beers):
-		beer_file = clean_address_for_filename(beer)+'.pickle'
+		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
 		if loud:
 			print ('working on beer ',j, 'of', beer_length)
 		beer_data = check_local(beer_file, scrape_and_parse_beer, beer)		
