@@ -22,9 +22,9 @@ chrome_options.binary_location = '/Applications/Google Chrome Canary.app/Content
 max_errors = 5
 
 def delay():
-	return (random.random()*.2 + .4)
+	return (1)
 
-def scrape_one(page, max_errors = max_errors, use_selenium = False):
+def scrape_one(page, max_errors = max_errors):
 	for _ in range(max_errors):
 		response = requests.get(page)
 		if response.status_code ==429:
