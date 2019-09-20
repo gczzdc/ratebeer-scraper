@@ -82,29 +82,32 @@ def generate_all(delay = delay, loud=True):
 
 	stores them algorithmically as pickles
 	"""
-	regions = check_local(regions_page_file, find_regions, [],delay)
+	regions,local = check_local(regions_page_file, find_regions, [],delay)
 	region_length = len(regions)
 	all_breweries = []
 	for (j,region) in enumerate(regions):
+		t0 = time.time()
 		breweries_file = 'breweries/'+clean_address_for_filename(region)+'.pickle'
-		if loud:
-			print ('working on region ',j, 'of', region_length)
-		breweries = check_local(breweries_file, find_breweries, [region,],delay)
+		breweries, local = check_local(breweries_file, find_breweries, [region,],delay)
+		if loud and not local:
+			print ('completed region',j, 'of', region_length,'in',round(time.time()-t0,2),'seconds')
 		all_breweries.extend(breweries)
 	brewery_length = len(all_breweries)
 	all_beers = []
-	for j,brewery in enumerate(all_breweries):
+	for (j,brewery) in enumerate(all_breweries):
+		t0 = time.time()
 		beers_file = 'brewers/'+clean_address_for_filename(brewery)+'.pickle'
-		if loud:
-			print ('working on brewery ',j, 'of', brewery_length)
-		beers = check_local(beers_file, find_beers, [brewery,],delay)
+		beers, local = check_local(beers_file, find_beers, [brewery,],delay)
+		if loud and not local:
+			print ('completed brewery',j, 'of', brewery_length,'in',round(time.time()-t0,2),'seconds')
 		all_beers.extend(beers)
 	beer_length = len(all_beers)
 	for (j,beer) in enumerate(all_beers):
+		t0 = time.time()
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
-		if loud:
-			print ('working on beer ',j, 'of', beer_length)
-		beer_data = check_local(beer_file, scrape_and_parse_beer, [beer,], delay)		
+		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,], delay)
+		if loud and not local:
+			print ('completed beer',j, 'of', beer_length,'in',round(time.time()-t0,2),'seconds')		
 
 
 def find_regions(regions_page = regions_page):
