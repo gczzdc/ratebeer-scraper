@@ -64,14 +64,16 @@ def check_local(
 	'''
 	open (file_name,'a').close()
 	if check_empty(file_name):
+		local = False
 		output = action_function(*arguments)
 		time.sleep(delay)
 		with open(file_name, 'wb') as f:
 			pickle.dump(output,f)
 	else:
+		local=True
 		with open(file_name, 'rb') as f:
 			output = pickle.load(f)
-	return (output)
+	return (output, local)
 
 
 def generate_all(delay = delay, loud=True):
