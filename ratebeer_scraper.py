@@ -5,9 +5,18 @@ from number_parser import parse_number
 import exceptions
 from error_logger import log
 import time
+import os
+import pickle
+import random
 
+def delay():
+	return (random.random()*.2 + .5)
+
+html_parser = 'html.parser'
 base_url = 'https://www.ratebeer.com'
 regions_page = '/brewery-directory.asp'
+regions_page_file = 'regions.pickle'
+
 # web-accessible database structure for ratebeer:
 #
 # https://www.ratebeer.com/brewery-directory.asp
@@ -22,8 +31,80 @@ regions_page = '/brewery-directory.asp'
 # https://www.ratebeer.com/brewers/allegheny-city-brewing/28937/
 # returns a list of beers
 
+def check_empty(file):
+	return (os.stat(file).st_size == 0)
 
-def find_ratebeer_regions(regions_page = regions_page):
+def clean_address_for_filename(s):
+	"""
+	replace non-alpha-numeric with '-'
+
+	"""
+	clean_s = ''
+	for character in s[1:]:
+		if character.isalnum():
+			clean_s += character
+		else:
+			clean_s += '-'
+	return (clean_s)
+
+
+def check_local(
+	file_name,
+	action_function, 
+	arguments
+	):
+	'''
+	checks local pickle cache and then fetches remotely
+
+	file_name is where we look for the pickle
+	if it's nonempty we assume it's a correctly formed pickle
+	if it's empty we call action_function(*args)
+	and write the result to our pickle file
+	'''
+	open (file_name,'a').close()
+	if check_empty(file_name):
+		output = action_function(*arguments)
+		time.sleep(delay())
+		with open(file_name, 'wb') as f:
+			pickle.dump(output,f)
+	else:
+		with open(file_name, 'rb') as f:
+			output = pickle.load(f)
+	return (output)
+
+
+def generate_all(loud=True):
+	"""
+	get all beer files for ratebeer, skipping locally cached ones
+
+	stores them algorithmically as pickles
+	"""
+	regions = check_local(regions_page_file, find_regions, [])
+	region_length = len(regions)
+	all_breweries = []
+	for (j,region) in enumerate(regions):
+		breweries_file = clean_address_for_filename(region)+'.pickle'
+		if loud:
+			print ('working on region ',j, 'of', region_length)
+		breweries = check_local(breweries_file, find_breweries, [region,])
+		all_breweries.extend(breweries)
+	brewery_length = len(all_breweries)
+	all_beers = []
+	for j,brewery in enumerate(all_breweries):
+		beers_file = clean_address_for_filename(brewery)+'.pickle'
+		if loud:
+			print ('working on brewery ',j, 'of', brewery_length)
+		beers = check_local(beers_file, find_beers, [brewery,])
+		all_beers.extend(beers)
+	beer_length = len(all_beers)
+	for (j,beer) in enumerate(all_beers):
+		beer_file = clean_address_for_filename(beer)+'.pickle'
+		if loud:
+			print ('working on beer ',j, 'of', beer_length)
+		beer_data = check_local(beer_file, scrape_and_parse_beer, beer)		
+
+
+def find_regions(regions_page = regions_page):
 	'''
 	returns a list of relative links to region pages
 
@@ -31,7 +112,7 @@ def find_ratebeer_regions(regions_page = regions_page):
 	usually shouldn't need specification
 	'''
 	response_text = scraper.scrape_one(base_url+regions_page)
-	response_soup = BeautifulSoup(response_text,'html.parser')
+	response_soup = BeautifulSoup(response_text, html_parser)
 	parent_div = response_soup.find('div',id='default')
 	anchors = parent_div.find_all('a')
 	links = [a['href'] for a in anchors]
@@ -44,7 +125,7 @@ def parse_region_page(region_html,active_only=False):
 	optional argument specifying whether to look only at active breweries
 	default false
 	'''
-	region_soup = BeautifulSoup(region_html,'html.parser')
+	region_soup = BeautifulSoup(region_html, html_parser)
 	tables = region_soup.find_all(id='brewerTable')
 	if active_only:
 		tables = tables[:1]
@@ -57,7 +138,7 @@ def parse_region_page(region_html,active_only=False):
 		brewery_pages.extend(links)
 	return (brewery_pages)
 
-def find_ratebeer_breweries(region_page, active_only = False):
+def find_breweries(region_page, active_only = False):
 	'''
 	returns a list of relative links to brewery pages
 
@@ -68,7 +149,7 @@ def find_ratebeer_breweries(region_page, active_only = False):
 	return (parse_region_page(response_text,active_only))
 
 
-def find_ratebeer_many_breweries(region_pages, active_only=False):
+def find_async_breweries(region_pages, active_only=False):
 	'''
 	returns a list of lists of relative links to brewery pages
 
@@ -79,19 +160,21 @@ def find_ratebeer_many_breweries(region_pages, active_only=False):
 	return (scraper.find_and_parse_many_pages(
 		base_url = base_url, 
 		page_list =region_pages, 
-		parser =parse_region_page, 
+		parser =parse_region_page,
+		loud = True, 
 		kw_dic=kw_dic))
 	
-def find_ratebeer_many_beers(brewery_pages):
+def find_async_beers(brewery_pages):
 	'''
 	returns a list of lists of relative links to beer pages
 	'''
 	return (scraper.find_and_parse_many_pages(
 		base_url=base_url,
 		page_list = brewery_pages,
-		parser = parse_brewery_page))
+		parser = parse_brewery_page,
+		loud = True))
 
-def find_ratebeer_beers(brewery_page):
+def find_beers(brewery_page):
 	'''
 	returns a list of relative links to beer pages
 	'''
@@ -105,7 +188,7 @@ def parse_brewery_page(brewery_html):
 
 	expects a beautiful soup of a brewery page
 	'''
-	brewery_soup = BeautifulSoup(brewery_html)
+	brewery_soup = BeautifulSoup(brewery_html, html_parser)
 	tbody = brewery_soup.find('tbody')
 	table_rows = tbody.find_all('tr')
 	anchors = [row.td.strong.a for row in table_rows]
@@ -126,7 +209,7 @@ def scrape_and_parse_beer(beer_page):
 		time.sleep(scraper.js_sleep)
 		beer_html = driver.page_source
 		try:
-			beer_info = parse_ratebeer_beer(beer_html)
+			beer_info = parse_beer(beer_html)
 			break
 		except exceptions.ParseError:
 			pass
@@ -135,7 +218,7 @@ def scrape_and_parse_beer(beer_page):
 	driver.close()
 	return (beer_info)
 
-def parse_ratebeer_beer(beer_html):
+def parse_beer(beer_html):
 	'''
 	saves less information than the whole webpage
 
@@ -157,7 +240,7 @@ def parse_ratebeer_beer(beer_html):
 	reviews
 	similar
 	'''
-	beer_soup = BeautifulSoup(beer_html)
+	beer_soup = BeautifulSoup(beer_html, html_parser)
 	wrapping_div = beer_soup.find(class_='p-4')
 	if wrapping_div == None:
 		raise exceptions.ParseError("no wrapping div")
