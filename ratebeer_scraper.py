@@ -188,11 +188,21 @@ def parse_brewery_page(brewery_html):
 	expects a beautiful soup of a brewery page
 	'''
 	brewery_soup = BeautifulSoup(brewery_html, html_parser)
-	tbody = brewery_soup.find('tbody')
-	table_rows = tbody.find_all('tr')
-	anchors = [row.td.strong.a for row in table_rows]
-	links = [a['href'] for a in anchors]
-	return (links)
+	try:
+		tbody = brewery_soup.find('tbody')
+		table_rows = tbody.find_all('tr')
+		anchors = [row.td.strong.a for row in table_rows]
+		links = [a['href'] for a in anchors]
+		return (links)
+	except:
+		try:
+			title_h1 = brewery_soup.find(itemprop='name')
+			brewery = title_h1.text
+			log('brewery failed to load beer list (possibly too many beers) for brewery ' + brewery)
+			return ([])
+		except:
+			print (brewery_html)
+			raise
 
 def scrape_and_parse_beer(beer_page):
 	'''
