@@ -1,5 +1,5 @@
 class ParseError(Exception):
 	pass
 
-class WaitError(Exception):
+class GreedyError(Exception):
 	pass
