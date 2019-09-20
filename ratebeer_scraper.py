@@ -9,8 +9,8 @@ import os
 import pickle
 import random
 
-def delay():
-	return (random.random()*.2 + .5)
+
+delay = 1.2
 
 html_parser = 'html.parser'
 base_url = 'https://www.ratebeer.com'
