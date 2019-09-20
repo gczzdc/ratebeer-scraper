@@ -51,6 +51,8 @@ def clean_address_for_filename(s):
 def check_local(
 	file_name,
 	action_function, 
+	arguments,
+	delay=delay
 	):
 	'''
 	checks local pickle cache and then fetches remotely
@@ -72,20 +74,20 @@ def check_local(
 	return (output)
 
 
-def generate_all(loud=True):
+def generate_all(delay = delay, loud=True):
 	"""
 	get all beer files for ratebeer, skipping locally cached ones
 
 	stores them algorithmically as pickles
 	"""
-	regions = check_local(regions_page_file, find_regions, [])
+	regions = check_local(regions_page_file, find_regions, [],delay)
 	region_length = len(regions)
 	all_breweries = []
 	for (j,region) in enumerate(regions):
 		breweries_file = 'breweries/'+clean_address_for_filename(region)+'.pickle'
 		if loud:
 			print ('working on region ',j, 'of', region_length)
-		breweries = check_local(breweries_file, find_breweries, [region,])
+		breweries = check_local(breweries_file, find_breweries, [region,],delay)
 		all_breweries.extend(breweries)
 	brewery_length = len(all_breweries)
 	all_beers = []
