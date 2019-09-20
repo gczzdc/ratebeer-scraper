@@ -93,14 +93,14 @@ def generate_all(loud=True):
 		beers_file = 'brewers/'+clean_address_for_filename(brewery)+'.pickle'
 		if loud:
 			print ('working on brewery ',j, 'of', brewery_length)
-		beers = check_local(beers_file, find_beers, [brewery,])
+		beers = check_local(beers_file, find_beers, [brewery,],delay)
 		all_beers.extend(beers)
 	beer_length = len(all_beers)
 	for (j,beer) in enumerate(all_beers):
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
 		if loud:
 			print ('working on beer ',j, 'of', beer_length)
-		beer_data = check_local(beer_file, scrape_and_parse_beer, beer)		
+		beer_data = check_local(beer_file, scrape_and_parse_beer, [beer,], delay)		
 
 
 def find_regions(regions_page = regions_page):
