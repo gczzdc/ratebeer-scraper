@@ -51,7 +51,6 @@ def clean_address_for_filename(s):
 def check_local(
 	file_name,
 	action_function, 
-	arguments
 	):
 	'''
 	checks local pickle cache and then fetches remotely
