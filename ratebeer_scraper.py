@@ -64,7 +64,7 @@ def check_local(
 	open (file_name,'a').close()
 	if check_empty(file_name):
 		output = action_function(*arguments)
-		time.sleep(delay())
+		time.sleep(delay)
 		with open(file_name, 'wb') as f:
 			pickle.dump(output,f)
 	else:
