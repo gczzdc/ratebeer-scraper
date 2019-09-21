@@ -8,16 +8,44 @@ import exceptions
 import os  
 from selenium import webdriver  
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
 import time
 import random
+from sysconfig import get_platform
+
+
 
 delay = .4
 js_sleep =.5
-chrome_options = Options()  
-chrome_options.add_argument("--headless")  
-chrome_options.binary_location = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
-#mac-os specific
+
+
+chosen_driver = 'chrome'
+#chosen_driver = 'firefox'
+
+if chosen_driver == 'chrome':
+	from selenium.webdriver.chrome.options import Options
+	chrome_options = Options()
+	chrome_options.add_argument("--headless")  
+	chrome_options.binary_location = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
+elif chosen_driver == 'firefox'
+	from selenium.webdriver.firefox.options import Options
+	firefox_options = Options()
+	firefox_options.headless = True
+	geckodriver_path = '/usr/local/bin/geckodriver'
+
+
+def start_driver(chosen_driver = chosen_driver):
+	if chosen_driver == 'chrome':
+		driver = webdriver.Chrome(executable_path=os.path.abspath("chromedriver"), options=chrome_options)
+	elif chosen_driver == 'firefox':
+		driver = webdriver.Firefox(options = options, executable_path = '/usr/local/bin/geckodriver')
+	else:
+		driver = None
+	return (driver)
+
+
+  
+
+
 
 max_errors = 5
 
@@ -34,12 +62,6 @@ def scrape_one(page, max_errors = max_errors):
 	else:
 		raise Exception("too many errors; last status"+ str(response.status_code) + '; text: '+response.text )
 
-def scrape_one_js(page):
-	#note, this has no validation of html status codes (or anything else)
-	driver = webdriver.Chrome(executable_path=os.path.abspath("chromedriver"), options=chrome_options)
-	driver.get(page)
-	return(driver)
-	#need to access page_source
 	
 
 def scrape_many(pages,delay=delay):
