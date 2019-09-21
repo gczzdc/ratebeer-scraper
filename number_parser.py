@@ -1,6 +1,8 @@
 import error_logger
 import numpy as np
 
+verbose = False
+
 def parse_number(parse_string,
 	coercion_type=float,
 	lstrip = '',
