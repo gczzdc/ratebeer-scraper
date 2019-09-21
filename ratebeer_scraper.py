@@ -8,6 +8,7 @@ import time
 import os
 import pickle
 import random
+import numpy as np
 
 
 delay = 1.2
@@ -102,13 +103,16 @@ def generate_all(delay = delay, loud=True):
 			print ('completed brewery',j, 'of', brewery_length,'in',round(time.time()-t0,2),'seconds')
 		all_beers.extend(beers)
 	beer_length = len(all_beers)
+	has_ibu = 0
 	for (j,beer) in enumerate(all_beers):
 		t0 = time.time()
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
 		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,], delay)
+		if beer_data['ibu'] != np.nan:
+			has_ibu+=1
 		if loud and not local:
 			print ('completed beer',j, 'of', beer_length,'in',round(time.time()-t0,2),'seconds')		
-
+			print (has_ibu,'beers with ibu data (ratio',round(has_ibu/(j+1) , 3),')')
 
 def find_regions(regions_page = regions_page):
 	'''
