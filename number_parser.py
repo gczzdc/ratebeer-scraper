@@ -23,24 +23,33 @@ def parse_number(parse_string,
 		return (null_value)
 	log_string = 'parse_number received string ' + parse_string
 	if parse_string[:len(lstrip)] != lstrip:
-		log_string += ' but expected it to begin with '+lstrip
+		log_string += ' but expected it to begin with "'+lstrip+'"'
 		error_logger.log(log_string)
 		return (null_value)
 	left_stripped = parse_string[len(lstrip):]
 	if rstrip and left_stripped[-len(rstrip):] != rstrip:
-		log_string += ' but expected it to end with '+rstrip
-		log_string += ' after stripping '+lstrip
-		log_string += 'from the beginning'
+		log_string += ' but expected it to end with "'+rstrip
+		log_string += '" after stripping "'+lstrip
+		log_string += '" from the beginning'
 		error_logger.log(log_string)
 		return (null_value)
-	stripped=left_stripped[:-len(rstrip)]
+	if rstrip:
+		stripped = left_stripped[:-len(rstrip)]
+	else:
+		stripped = left_stripped
 	try:
 		ans = coercion_type(stripped)
+		if verbose:
+			print ('parsed',parse_string,'to',ans)
 		return(ans)
 	except:
 		log_string += ' but expected it to coerce to type '+str(coercion_type)
-		log_string += ' after stripping '+lstrip
-		log_string += ' from the beginning and '+rstrip
-		log_string += ' from the end'
+		log_string += ' after stripping "'+lstrip
+		log_string += '" from the beginning and "'+rstrip
+		log_string += '" from the end'
+		log_string += ' to obtain "'
+		log_string += stripped
+		log_string += '"'
 		error_logger.log(log_string)
+		raise
 		return (null_value)
