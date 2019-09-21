@@ -26,7 +26,7 @@ if chosen_driver == 'chrome':
 	chrome_options = Options()
 	chrome_options.add_argument("--headless")  
 	chrome_options.binary_location = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
-elif chosen_driver == 'firefox'
+elif chosen_driver == 'firefox':
 	from selenium.webdriver.firefox.options import Options
 	firefox_options = Options()
 	firefox_options.headless = True
