@@ -104,15 +104,17 @@ def generate_all(delay = delay, loud=True):
 		all_beers.extend(beers)
 	beer_length = len(all_beers)
 	has_ibu = 0
+	driver = scraper.start_driver() #need javascript for these pages
 	for (j,beer) in enumerate(all_beers):
 		t0 = time.time()
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
-		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,], delay)
+		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,driver], delay)
 		if beer_data['ibu'] != np.nan:
 			has_ibu+=1
 		if loud and not local:
 			print ('completed beer',j, 'of', beer_length,'in',round(time.time()-t0,2),'seconds')		
 			print (has_ibu,'beers with ibu data (ratio',round(has_ibu/(j+1) , 3),')')
+	driver.close()
 
 def find_regions(regions_page = regions_page):
 	'''
@@ -215,7 +217,7 @@ def parse_brewery_page(brewery_html):
 			print (brewery_html)
 			raise
 
-def scrape_and_parse_beer(beer_page):
+def scrape_and_parse_beer(beer_page, driver):
 	'''
 	attempts to scrape and parse a beer page
 
@@ -223,7 +225,7 @@ def scrape_and_parse_beer(beer_page):
 	empirically this means that we should wait .3 seconds
 	before accessing page source to parse.
 	'''
-	driver = scraper.scrape_one_js(base_url + beer_page)
+	driver.get(base_url + beer_page)
 	beer_info = {}
 	for j in range(scraper.max_errors):
 		time.sleep(scraper.js_sleep)
@@ -235,7 +237,6 @@ def scrape_and_parse_beer(beer_page):
 			pass
 	else:
 		log('Failed to parse beer page '+beer_page)
-	driver.close()
 	return (beer_info)
 
 def parse_beer(beer_html):
