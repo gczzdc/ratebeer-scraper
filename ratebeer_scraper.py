@@ -271,39 +271,57 @@ def parse_beer(beer_html):
 	wrapping_div = beer_soup.find(class_='p-4')
 	if wrapping_div == None:
 		raise exceptions.ParseError("no wrapping div")
-	info_and_text_divs= wrapping_div.find_all('div',recursive=False)
-	info_div = info_and_text_divs[0]
-	text_div = info_and_text_divs[1]
-	broken_info_div = info_div.div.find_all('div',recursive=False)
-	name_and_loc_divs = broken_info_div[0].div.find_all('div',recursive=False)
-	name_div = name_and_loc_divs[0]
-	loc_div = name_and_loc_divs[1]
-	other_info_div = broken_info_div[1]
-	broken_other_divs = other_info_div.find_all('div',recursive=False)
-	style_brewer_div = broken_other_divs[0]
-	abv_ibu_div = broken_other_divs[1]
-	style_brewer_divs = style_brewer_div.find_all('div',recursive=False)
-	style_div = style_brewer_divs[0]
-	brewer_div = style_brewer_divs[1]
-	abv_ibu_divs = abv_ibu_div.find_all('div',recursive=False)
-	abv_div = abv_ibu_divs[0]
-	ibu_div = abv_ibu_divs[1]
+	try:
+		info_and_text_divs= wrapping_div.find_all('div',recursive=False)
+		info_div = info_and_text_divs[0]
+		text_div = info_and_text_divs[1]
+		try:
+			aka_text = text_div.span.span.text.strip() 
+			print (aka_text)
+			if aka_text == 'Also Known As':
+				alias = text_div.a.text
+				return ({})
+			else:
+				raise exceptions.ParseError("looks like AKA but doesn't parse")
+		except:
+			pass
+		broken_info_div = info_div.div.find_all('div',recursive=False)
+		name_and_loc_divs = broken_info_div[0].div.find_all('div',recursive=False)
+		name_div = name_and_loc_divs[0]
+		loc_div = name_and_loc_divs[1]
+		other_info_div = broken_info_div[1]
+		broken_other_divs = other_info_div.find_all('div',recursive=False)
+		style_brewer_div = broken_other_divs[0]
+		abv_ibu_div = broken_other_divs[1]
+		style_brewer_divs = style_brewer_div.find_all('div',recursive=False)
+		style_div = style_brewer_divs[0]
+		brewer_div = style_brewer_divs[1]
+		abv_ibu_divs = abv_ibu_div.find_all('div',recursive=False)
+		abv_div = abv_ibu_divs[0]
+		ibu_div = abv_ibu_divs[1]
 
-	beer_info = {}
-	beer_info['name']=name_div.text
-	beer_info['location']=loc_div.text
-	beer_info['brewer']=brewer_div.a.text
-	beer_info['image_url'] = info_div.img['src']
-	beer_info['style']=style_div.a.text
+		beer_info = {}
+		beer_info['name']=name_div.text
+		beer_info['location']=loc_div.text
+		beer_info['brewer']=brewer_div.a.text
+		beer_info['image_url'] = info_div.img['src']
+		beer_info['style']=style_div.a.text
 
-	abv_string = abv_div.div.text
-	beer_info['abv']=parse_abv(abv_string)
+		abv_string = abv_div.div.text
+		beer_info['abv']=parse_abv(abv_string)
 
-	ibu_string = ibu_div.div.text
-	beer_info['ibu']=parse_ibu(ibu_string)
-	beer_info['text']=text_div.text
-	return(beer_info)
-
+		ibu_string = ibu_div.div.text
+		beer_info['ibu']=parse_ibu(ibu_string)
+		beer_info['text']=text_div.text
+		return(beer_info)
+	except:
+		print (wrapping_div.prettify())
+		print ()
+		# print ('########')
+		print ()
+		# print (beer_soup.prettify())
+		input('PRESS A KEY TO RAISE ERROR')
+		raise
 
 
 def parse_abv(abv_string):
