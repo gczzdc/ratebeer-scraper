@@ -171,8 +171,12 @@ def find_beers(brewery_page):
 	returns a list of relative links to beer pages
 	'''
 	response_html = scraper.scrape_one(base_url+brewery_page)
-	return (parse_brewery_page(response_html))
-
+	try:
+		return (parse_brewery_page(response_html))
+	except:
+		brewery_id = brewery_page.split('/')[-2]
+		response_html = scraper.scrape_one(base_url+'/Ratings/Beer/ShowBrewerBeers.asp?BrewerID='+brewery_id)
+		return (parse_brewery_page(response_html))
 
 def parse_brewery_page(brewery_html):
 	'''
@@ -181,21 +185,12 @@ def parse_brewery_page(brewery_html):
 	expects a beautiful soup of a brewery page
 	'''
 	brewery_soup = BeautifulSoup(brewery_html, html_parser)
-	try:
-		tbody = brewery_soup.find('tbody')
-		table_rows = tbody.find_all('tr')
-		anchors = [row.td.strong.a for row in table_rows]
-		links = [a['href'] for a in anchors]
-		return (links)
-	except:
-		try:
-			title_h1 = brewery_soup.find(itemprop='name')
-			brewery = title_h1.text
-			log('brewery failed to load beer list (possibly too many beers) for brewery ' + brewery)
-			return ([])
-		except:
-			print (brewery_html)
-			raise
+	tbody = brewery_soup.find('tbody')
+	table_rows = tbody.find_all('tr')
+	anchors = [row.td.strong.a for row in table_rows]
+	links = [a['href'] for a in anchors]
+	return (links)
+	
 
 def scrape_and_parse_beer(beer_page, driver):
 	'''
