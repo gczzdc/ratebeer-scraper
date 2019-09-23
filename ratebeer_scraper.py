@@ -213,10 +213,21 @@ def scrape_and_parse_beer(beer_page, driver):
 		try:
 			beer_info = parse_beer(beer_html)
 			break
-		except exceptions.ParseError:
+		except (exceptions.ParseError,exceptions.NoFullDescription):
 			pass
 	else:
-		log('Failed to parse beer page '+beer_page)
+		time.sleep(scraper.js_sleep)
+		beer_html = driver.page_source
+		try:
+			beer_info = parse_beer(beer_html)
+		except exceptions.NoFullDescription as warning:
+			log('failed to load full text for '+beer_page)
+		except exceptions.ParseError:
+			#print ('full html: ')
+			#print (beer_html)
+			log('ParseError for '+beer_page)
+	# else:
+	# 	log('Failed to parse beer page '+beer_page)
 	return (beer_info)
 
 def parse_beer(beer_html):
@@ -251,11 +262,11 @@ def parse_beer(beer_html):
 		text_div = info_and_text_divs[1]
 		try:
 			aka_text = text_div.span.span.text.strip() 
-			print (aka_text)
 			if aka_text == 'Also Known As':
 				alias = text_div.a.text
 				return ({})
 			else:
+				print ('aka_text: "'+aka_text+'"')
 				raise exceptions.ParseError("looks like AKA but doesn't parse")
 		except:
 			pass
@@ -287,14 +298,26 @@ def parse_beer(beer_html):
 		ibu_string = ibu_div.div.text
 		beer_info['ibu']=parse_ibu(ibu_string)
 		beer_info['text']=text_div.text
+
+		if beer_info['text'] and beer_info['text'][-1]=='…':
+			description_count = beer_html.count('"description"')
+			if description_count==1:
+				beer_info['full_text']=beer_html[beer_html.index('"description"'):].split('"')[3]
+			elif description_count>1:
+				raise exceptions.ParseError('too many descriptions')
+			else:
+				raise exceptions.NoFullDescription('not enough descriptions',beer_info['name'])
 		return(beer_info)
+	except (exceptions.ParseError, exceptions.NoFullDescription):
+		raise
 	except:
+		print ('wrapping div: ')
 		print (wrapping_div.prettify())
 		print ()
 		# print ('########')
-		print ()
+		# print ()
 		# print (beer_soup.prettify())
-		input('PRESS A KEY TO RAISE ERROR')
+		# input('PRESS A KEY TO RAISE ERROR')
 		raise
 
 
