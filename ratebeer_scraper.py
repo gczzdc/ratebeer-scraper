@@ -237,10 +237,11 @@ def scrape_and_parse_beer(beer_page, driver):
 		except exceptions.NoFullDescription:
 			try:
 				driver.find_element_by_class_name('-ml-3').click()
-				time.sleep(scraper.js_sleep)
+				time.sleep(scraper.js_sleep*3)
 				beer_info = parse_beer(driver.page_source)
 			except:
 				log('failed to load full text or find button for '+beer_page)
+				break
 	else:
 		time.sleep(scraper.js_sleep)
 		beer_html = driver.page_source
