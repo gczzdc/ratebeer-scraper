@@ -32,6 +32,8 @@ regions_page_file = 'regions/regions.pickle'
 # https://www.ratebeer.com/brewers/allegheny-city-brewing/28937/
 # returns a list of beers
 
+default_delay=2.5
+
 def check_empty(file):
 	return (os.stat(file).st_size == 0)
 
@@ -53,7 +55,7 @@ def check_local(
 	file_name,
 	action_function, 
 	arguments,
-	delay=delay
+	delay=default_delay
 	):
 	'''
 	checks local pickle cache and then fetches remotely
@@ -77,7 +79,7 @@ def check_local(
 	return (output, local)
 
 
-def generate_all(delay = delay, loud=True):
+def generate_all(delay = default_delay, loud=True):
 	"""
 	get all beer files for ratebeer, skipping locally cached ones
 
