@@ -3,3 +3,6 @@ class ParseError(Exception):
 
 class GreedyError(Exception):
 	pass
+
+class NoFullDescription(Exception):
+	pass
