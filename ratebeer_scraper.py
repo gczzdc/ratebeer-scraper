@@ -103,7 +103,7 @@ def generate_all(delay = delay, loud=True):
 			print ('completed brewery',j, 'of', brewery_length,'in',round(time.time()-t0,2),'seconds')
 		all_beers.extend(beers)
 	beer_length = len(all_beers)
-	has_ibu = 0
+	has_ibu_and_text = 0
 	total_time = 0
 	non_local = 0
 	driver = scraper.start_driver() #need javascript for these pages
@@ -111,15 +111,14 @@ def generate_all(delay = delay, loud=True):
 		t0 = time.time()
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
 		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,driver], delay)
-		if beer_data and (not np.isnan(beer_data['ibu'])):
-			has_ibu+=1
+		if beer_data and (not np.isnan(beer_data['ibu'])) and beer_data['text'].strip():
+			has_ibu_and_text+=1
 		if loud and not local:
 			non_local +=1
 			t1 = time.time()
 			total_time+=t1-t0
 			print ('completed beer',j, 'of', beer_length,'in',round(t1-t0,2),'seconds')		
-			print (has_ibu,'beers with ibu data (ratio',round(has_ibu/(j+1) , 3),')')
-			print ('average time per beer',round(total_time/non_local,3))
+			print (has_ibu_and_text,'beers with ibu and text data (ratio',round(has_ibu_and_text/(j+1) , 3),')','average time per beer',round(total_time/non_local,3))
 	driver.close()
 
 def find_regions(regions_page = regions_page):
