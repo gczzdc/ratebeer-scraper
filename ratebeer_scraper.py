@@ -314,10 +314,6 @@ def parse_beer(beer_html):
 		print ('wrapping div: ')
 		print (wrapping_div.prettify())
 		print ()
-		# print ('########')
-		# print ()
-		# print (beer_soup.prettify())
-		# input('PRESS A KEY TO RAISE ERROR')
 		raise
 
 
