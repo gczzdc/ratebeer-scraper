@@ -167,31 +167,6 @@ def find_breweries(region_page, active_only = False):
 	return (parse_region_page(response_text,active_only))
 
 
-def find_async_breweries(region_pages, active_only=False):
-	'''
-	returns a list of lists of relative links to brewery pages
-
-	optional argument specifying whether to look only at active breweries
-	default false
-	'''
-	kw_dic = {'active_only':active_only}
-	return (scraper.find_and_parse_many_pages(
-		base_url = base_url, 
-		page_list =region_pages, 
-		parser =parse_region_page,
-		loud = True, 
-		kw_dic=kw_dic))
-	
-def find_async_beers(brewery_pages):
-	'''
-	returns a list of lists of relative links to beer pages
-	'''
-	return (scraper.find_and_parse_many_pages(
-		base_url=base_url,
-		page_list = brewery_pages,
-		parser = parse_brewery_page,
-		loud = True))
-
 def find_beers(brewery_page):
 	'''
 	returns a list of relative links to beer pages
