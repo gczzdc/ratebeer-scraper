@@ -79,7 +79,7 @@ def check_local(
 	return (output, local)
 
 
-def generate_all(delay = default_delay, loud=True):
+def generate_all(delay = default_delay, loud=True, start = None, end=None):
 	"""
 	get all beer files for ratebeer, skipping locally cached ones
 
@@ -88,7 +88,7 @@ def generate_all(delay = default_delay, loud=True):
 	all_regions = generate_regions(delay)
 	all_breweries = generate_breweries(all_regions, delay, loud)
 	all_beers = generate_beers(all_breweries, delay, loud)
-	beer_data = get_beer_data(all_beers,delay,loud)
+	beer_data = get_beer_data(all_beers[start:end],delay,loud)
 	return (beer_data)
 
 def generate_regions(delay):
