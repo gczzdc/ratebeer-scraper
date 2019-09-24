@@ -119,14 +119,17 @@ def generate_beers(breweries, delay,loud=True):
 		all_beers.extend(beers)
 	return (all_beers)
 
-def get_beer_data(beers, delay, loud = True):
+def get_beer_data(beers, delay, loud = True, restart_driver = False):
 	all_data = []
 	beer_length = len(beers)
 	has_ibu_and_text = 0
 	total_time = 0
 	non_local = 0
-	driver = scraper.start_driver() #need javascript for these pages
+	driver = None
+	#need javascript for these pages
 	for (j,beer) in enumerate(beers):
+		if driver == None:
+			driver = scraper.start_driver()
 		t0 = time.time()
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
 		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,driver], delay)
@@ -139,9 +142,19 @@ def get_beer_data(beers, delay, loud = True):
 			print ('completed beer',j, 'of', beer_length,'in',round(t1-t0,2),'seconds')		
 			print (has_ibu_and_text,'beers with ibu and text data (ratio',round(has_ibu_and_text/(j+1) , 3),')','average time per beer',round(total_time/non_local,3))
 		all_data.append(beer_data)
-	driver.close()
+		if (not local) and restart_driver:
+			driver.close()
+			driver = None
+	if driver != None:
+		driver.close()
 	return (all_data)
 
+
+
+                if not local:
+                        driver.close()
+                        driver = None
+        return (all_data)
 
 
 
