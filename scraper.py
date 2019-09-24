@@ -25,7 +25,14 @@ if chosen_driver == 'chrome':
 	from selenium.webdriver.chrome.options import Options
 	chrome_options = Options()
 	chrome_options.add_argument("--headless")  
-	chrome_options.binary_location = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
+	this_os = get_platform().split('-')[0]
+	if this_os == 'macosx':
+		chrome_options.binary_location = '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
+		chromedriver_path = os.path.abspath("chromedriver")
+	elif this_os == 'linux':
+		chrome_options.binary_location = '/usr/bin/google-chrome'
+		chromedriver_path = '/usr/bin/chromedriver'
+
 elif chosen_driver == 'firefox':
 	from selenium.webdriver.firefox.options import Options
 	firefox_options = Options()
@@ -35,7 +42,7 @@ elif chosen_driver == 'firefox':
 
 def start_driver(chosen_driver = chosen_driver):
 	if chosen_driver == 'chrome':
-		driver = webdriver.Chrome(executable_path=os.path.abspath("chromedriver"), options=chrome_options)
+		driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
 	elif chosen_driver == 'firefox':
 		driver = webdriver.Firefox(options = options, executable_path = '/usr/local/bin/geckodriver')
 	else:
