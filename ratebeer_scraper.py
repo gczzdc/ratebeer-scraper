@@ -32,7 +32,7 @@ regions_page_file = 'regions/regions.pickle'
 # https://www.ratebeer.com/brewers/allegheny-city-brewing/28937/
 # returns a list of beers
 
-default_delay=2.5
+default_delay=3.5
 
 def check_empty(file):
 	return (os.stat(file).st_size == 0)
@@ -69,7 +69,6 @@ def check_local(
 	if check_empty(file_name):
 		local = False
 		output = action_function(*arguments)
-		time.sleep(delay)
 		with open(file_name, 'wb') as f:
 			pickle.dump(output,f)
 	else:
@@ -102,9 +101,12 @@ def generate_breweries(regions,delay, loud = True):
 		t0 = time.time()
 		breweries_file = 'breweries/'+clean_address_for_filename(region)+'.pickle'
 		breweries, local = check_local(breweries_file, find_breweries, [region,],delay)
-		if loud and not local:
-			print ('completed region',j, 'of', region_length,'in',round(time.time()-t0,2),'seconds')
-		all_breweries.extend(breweries)
+		if not local:
+			time.sleep(max(delay - timedelta(t0),0))
+			if loud:
+				print ('completed region',j, 'of', region_length,'in',round(timedelta(t0),2),'seconds')
+			
+		all_breweries.extend(breweries)			
 	return (all_breweries)
 
 def generate_beers(breweries, delay,loud=True):
@@ -114,8 +116,10 @@ def generate_beers(breweries, delay,loud=True):
 		t0 = time.time()
 		beers_file = 'brewers/'+clean_address_for_filename(brewery)+'.pickle'
 		beers, local = check_local(beers_file, find_beers, [brewery,],delay)
-		if loud and not local:
-			print ('completed brewery',j, 'of', brewery_length,'in',round(time.time()-t0,2),'seconds')
+		if not local:
+			time.sleep(max(delay - timedelta(t0),0))
+			if loud:
+				print ('completed brewery',j, 'of', brewery_length,'in',round(timedelta(t0),2),'seconds')
 		all_beers.extend(beers)
 	return (all_beers)
 
@@ -135,16 +139,18 @@ def get_beer_data(beers, delay, loud = True, restart_driver = False):
 		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,driver], delay)
 		if beer_data and (not np.isnan(beer_data['ibu'])) and beer_data['text'].strip():
 			has_ibu_and_text+=1
-		if loud and not local:
+		if not local:
 			non_local +=1
-			t1 = time.time()
-			total_time+=t1-t0
-			print ('completed beer',j, 'of', beer_length,'in',round(t1-t0,2),'seconds')		
-			print (has_ibu_and_text,'beers with ibu and text data (ratio',round(has_ibu_and_text/(j+1) , 3),')','average time per beer',round(total_time/non_local,3))
-		all_data.append(beer_data)
-		if (not local) and restart_driver:
-			driver.close()
-			driver = None
+			time.sleep(max(delay - timedelta(t0),0))
+			total_delta = timedelta(t0)			
+			total_time += total_delta
+			if loud:
+				print ('completed beer',j, 'of', beer_length,'in',round(total_delta,2),'seconds')		
+				print (has_ibu_and_text,'beers with ibu and text data (ratio',round(has_ibu_and_text/(j+1) , 3),')','average time per beer',round(total_time/non_local,3))
+			if restart_driver:
+				driver.close()
+				driver = None
+		all_data.append(beer_data)		
 	if driver != None:
 		driver.close()
 	return (all_data)
