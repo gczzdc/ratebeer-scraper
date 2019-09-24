@@ -50,6 +50,9 @@ def clean_address_for_filename(s):
 			clean_s += '-'
 	return (clean_s)
 
+def timedelta(t0):
+	return (time.time()-t0)
+
 
 def check_local(
 	file_name,
