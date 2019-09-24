@@ -151,11 +151,6 @@ def get_beer_data(beers, delay, loud = True, restart_driver = False):
 
 
 
-                if not local:
-                        driver.close()
-                        driver = None
-        return (all_data)
-
 
 
 def find_regions(regions_page = regions_page):
