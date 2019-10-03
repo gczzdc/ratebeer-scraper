@@ -126,6 +126,15 @@ def generate_beers(breweries, delay,loud=True):
 		all_beers.extend(beers)
 	return (all_beers)
 
+def check_ibu_and_text(beer_dic):
+	'''
+	checking basic keys' presence
+	'''
+	if 'ibu' in beer_dic and 'text' in beer_dic and (not np.isnan(beer_dic['ibu'])) and beer_dic['text'].strip():
+		return True
+	return False
+
+
 def get_beer_data(beers, delay, loud = True, restart_driver = False):
 	all_data = []
 	beer_length = len(beers)
@@ -140,7 +149,7 @@ def get_beer_data(beers, delay, loud = True, restart_driver = False):
 		t0 = time.time()
 		beer_file = 'beers/'+clean_address_for_filename(beer)+'.pickle'
 		beer_data, local = check_local(beer_file, scrape_and_parse_beer, [beer,driver], delay)
-		if beer_data and (not np.isnan(beer_data['ibu'])) and beer_data['text'].strip():
+		if check_ibu_and_text(beer_data):
 			has_ibu_and_text+=1
 		if not local:
 			non_local +=1
@@ -308,7 +317,7 @@ def parse_beer(beer_html):
 			aka_text = text_div.span.span.text.strip() 
 			if aka_text == 'Also Known As':
 				alias = text_div.a.text
-				return ({})
+				return ({'type':'aka'})
 			else:
 				print ('aka_text: "'+aka_text+'"')
 				raise exceptions.ParseError("looks like AKA but doesn't parse")
