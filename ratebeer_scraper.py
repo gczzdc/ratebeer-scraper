@@ -9,6 +9,7 @@ import os
 import pickle
 import random
 import numpy as np
+import codecs
 
 
 # delay = 1.2
@@ -355,7 +356,9 @@ def parse_beer(beer_html):
 		if beer_info['text'] and beer_info['text'][-1]=='…':
 			description_count = beer_html.count('"description"')
 			if description_count==1:
-				beer_info['full_text']=beer_html[beer_html.index('"description"'):].split('"')[3]
+				description_location = beer_html.index('"description"')
+				full_text_raw =beer_html[description_location+16:].split('",')[0]
+				beer_info['full_text']=codecs.decode(full_text_raw)
 			elif description_count>1:
 				raise exceptions.ParseError('too many descriptions')
 			else:
