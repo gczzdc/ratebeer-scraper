@@ -357,8 +357,8 @@ def parse_beer(beer_html):
 			description_count = beer_html.count('"description"')
 			if description_count==1:
 				description_location = beer_html.index('"description"')
-				full_text_raw =beer_html[description_location+16:].split('",')[0]
-				beer_info['full_text']=codecs.decode(full_text_raw)
+				full_text_raw =beer_html[description_location+16:].split('",\n')[0]
+				beer_info['full_text']=codecs.decode(full_text_raw, 'unicode-escape')
 			elif description_count>1:
 				raise exceptions.ParseError('too many descriptions')
 			else:
